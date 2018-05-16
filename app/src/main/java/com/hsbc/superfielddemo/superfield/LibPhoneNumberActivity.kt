@@ -197,34 +197,6 @@ class LibPhoneNumberActivity : AppCompatActivity() {
 
         }
 
-        val countryObserver: DisposableObserver<MutableList<Country>> = object : DisposableObserver<MutableList<Country>>() {
-            override fun onError(e: Throwable?) {
-                Toast.makeText(this@LibPhoneNumberActivity, e?.message, Toast.LENGTH_SHORT).show()
-            }
-
-
-            override fun onNext(t: MutableList<Country>?) {
-                if (t == null) {
-                    return
-                }
-
-                filterCountryFullName.clear()
-                if (t.size == 0) {
-                    dismissCountryCodeList()
-                    return
-                }
-
-                for (country in t) {
-                    filterCountryFullName.add(country.fullName)
-                }
-                showCountryCodeList()
-            }
-
-            override fun onComplete() {
-            }
-
-        }
-
         superFieldPublishSubject.debounce(VALID_PROXYID_DURATION, TimeUnit.SECONDS)
                 .filter(object : Predicate<String> {
                     override fun test(t: String): Boolean {
@@ -234,16 +206,19 @@ class LibPhoneNumberActivity : AppCompatActivity() {
                 })
                 .switchMap(object : Function<String, Observable<MatchResult>> {
                     override fun apply(t: String): Observable<MatchResult> {
-                        return SuperFieldMatcher.instance.parse(t)
+                        return SuperFieldMatcher.instance.parse0(t)
                     }
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
+                    if (ProxyIdValidator.isFpsId(et_input.text.toString())) {
+                        enableConfirmButton(true)
+                    }
                     when (it.type) {
                         ProxyIdEnum.SEARCHCOUNTRY -> {
                             filterCountryList = it.resultList
-                            showCountryCodeList()
+                            showCountryCodeList(it)
                         }
                         ProxyIdEnum.UNKNOWN -> {
                             // do nothing
@@ -268,38 +243,7 @@ class LibPhoneNumberActivity : AppCompatActivity() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(phoneObserver)
 
-        countryPublishSubject.debounce(200, TimeUnit.MILLISECONDS)
-                .filter(object : Predicate<String> {
-                    override fun test(t: String): Boolean {
-                        return t.length > 0
-                    }
-                })
-                .switchMap(object : Function<String, Observable<MutableList<Country>>> {
-                    override fun apply(t: String): Observable<MutableList<Country>> {
-                        filterCountryList.clear()
-                        if (t.startsWith("+")) {
-                            val phoneNumber = PhoneNumberUtil.getInstance().parse(t, "")
-                            for (country in countryList) {
-                                if (country.codeInt == phoneNumber.countryCode) {
-                                    filterCountryList.add(country)
-                                }
-                            }
-                        } else {
-                            for (country in countryList) {
-                                if (judgeContainsRegion(t.toUpperCase().trim(), country.fullName.toUpperCase().trim())) {
-                                    filterCountryList.add(country)
-                                }
-                            }
-                        }
-                        return Observable.just(filterCountryList)
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(countryObserver)
-
         compositeDisposable.add(phoneObserver)
-        compositeDisposable.add(countryObserver)
     }
 
     private fun startMatchPhoneNumber(phoneNumber: String) {
@@ -336,10 +280,6 @@ class LibPhoneNumberActivity : AppCompatActivity() {
 
     private fun startMatch(s: String) {
         countryPublishSubject.onNext(s)
-    }
-
-    private fun judgeContainsRegion(target: String, fullName: String): Boolean {
-        return fullName.toUpperCase().replace(" ", "").startsWith(target.toUpperCase().replace(" ", ""))
     }
 
     private fun parsePhoneNumber(phoneNumberStr: String) {
@@ -392,7 +332,7 @@ class LibPhoneNumberActivity : AppCompatActivity() {
     private var rootView: View? = null
     private lateinit var listAdapter: CountryListAdapter
 
-    private fun showCountryCodeList() {
+    private fun showCountryCodeList(result: MatchResult) {
         if (popupWindow == null) {
             rootView = LayoutInflater.from(this).inflate(R.layout.countrycode_popupwindow, null)
             val rvCountry = rootView?.findViewById<RecyclerView>(R.id.rv_countrycode)
@@ -403,7 +343,7 @@ class LibPhoneNumberActivity : AppCompatActivity() {
                 override fun onClick(position: Int, country: Country) {
                     // choosed country
                     dismissCountryCodeList()
-                    SuperFieldMatcher.instance.parse(country, et_input.text.toString())
+                    SuperFieldMatcher.instance.parse(country, country.phoneNumber)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe({
@@ -414,7 +354,7 @@ class LibPhoneNumberActivity : AppCompatActivity() {
                 }
             })
             listAdapter.datas = filterCountryList
-            listAdapter.setNationalNumber(et_input.text.toString())
+            listAdapter.setNationalNumber(result.nationalNumber)
             rvCountry?.adapter = listAdapter
             popupWindow = PopupWindow()
             popupWindow?.contentView = rootView
@@ -422,7 +362,7 @@ class LibPhoneNumberActivity : AppCompatActivity() {
             popupWindow?.height = 600
             popupWindow?.showAsDropDown(et_input)
         } else {
-            listAdapter.setNationalNumber(et_input.text.toString())
+            listAdapter.setNationalNumber(result.nationalNumber)
             listAdapter.notifyDataSetChanged()
         }
     }

@@ -12,8 +12,8 @@ class ProxyIdValidationImpl(strategy: IValidationStrategy) {
         this.strategy = strategy
     }
 
-    fun contextInterface(input: String) {
-        this.strategy.validProxyId(input)
+    fun validInput(input: String):Boolean {
+        return this.strategy.validProxyId(input)
     }
 
 }

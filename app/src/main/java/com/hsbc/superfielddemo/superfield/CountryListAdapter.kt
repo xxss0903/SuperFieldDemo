@@ -20,7 +20,7 @@ class CountryListAdapter : RecyclerView.Adapter<ViewHolder>() {
         if (datas[position].codeName == "FPSID") {
             holder?.textView?.text = "FPSID"
         } else {
-            holder?.textView?.text = "+${datas[position].codeInt}-$phoneNumber"
+            holder?.textView?.text = "(${datas[position].fullName}) +${datas[position].codeInt}-${datas[position].phoneNumber}"
         }
         holder?.itemView?.setOnClickListener(object : View.OnClickListener {
             override fun onClick(v: View?) {
