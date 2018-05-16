@@ -92,7 +92,7 @@ object ProxyIdValidator {
         return isMatchingExpectingPatterns(input, arrayOf(hkMobilePattern), true)
     }
 
-    fun isValidNewHkMobileNum(input: String): Boolean{
+    fun isValidNewHkMobileNum(input: String): Boolean {
         return isMatchingExpectingPatterns(input, arrayOf(newHkMobilePattern), true)
     }
 
@@ -106,5 +106,16 @@ object ProxyIdValidator {
 
     fun isFpsId(input: String): Boolean {
         return isMatchingExpectingPatterns(input, arrayOf(fpsIdPattern), true)
+    }
+
+    val mobilePatternType1 = Pattern.compile("^\\+[0-9]*$")
+
+    fun isValidPhoneNumberType1(input: String): Boolean {
+        return isMatchingExpectingPatterns(input, arrayOf(mobilePatternType1), true)
+    }
+
+    val mobilePatternType2 = Pattern.compile("^\\+?[0-9]*-[0-9]*$")
+    fun isValidPhoneNumberType2(input: String):Boolean{
+        return isMatchingExpectingPatterns(input, arrayOf(mobilePatternType2), true)
     }
 }

@@ -10,14 +10,18 @@ import com.hsbc.superfielddemo.R
 /**
  * Created by zack zeng on 2018/5/14.
  */
-class CountryListAdapter : RecyclerView.Adapter<ViewHolder>(){
+class CountryListAdapter : RecyclerView.Adapter<ViewHolder>() {
 
     private var phoneNumber = ""
     private lateinit var onItemClickListener: OnItemClickListener
     var datas: MutableList<Country> = mutableListOf()
 
     override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
-        holder?.textView?.text = "+${datas[position].codeInt}-$phoneNumber"
+        if (datas[position].codeName == "FPSID") {
+            holder?.textView?.text = "FPSID"
+        } else {
+            holder?.textView?.text = "+${datas[position].codeInt}-$phoneNumber"
+        }
         holder?.itemView?.setOnClickListener(object : View.OnClickListener {
             override fun onClick(v: View?) {
                 onItemClickListener.onClick(position, datas[position])
@@ -35,17 +39,17 @@ class CountryListAdapter : RecyclerView.Adapter<ViewHolder>(){
     }
 
 
-    fun setOnItemClickListener(onItemClickListener: OnItemClickListener){
+    fun setOnItemClickListener(onItemClickListener: OnItemClickListener) {
         this.onItemClickListener = onItemClickListener
     }
 
-    fun setNationalNumber(phoneNumber: String){
+    fun setNationalNumber(phoneNumber: String) {
         this.phoneNumber = phoneNumber
     }
 
 }
 
-interface OnItemClickListener{
+interface OnItemClickListener {
     fun onClick(position: Int, country: Country)
 }
 

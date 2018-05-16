@@ -17,6 +17,7 @@ import com.google.i18n.phonenumbers.Phonenumber
 import com.google.i18n.phonenumbers.geocoding.PhoneNumberOfflineGeocoder
 import com.hsbc.superfielddemo.R
 import io.reactivex.Observable
+import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Function
@@ -82,6 +83,29 @@ class LibPhoneNumberActivity : AppCompatActivity() {
     private lateinit var phonePublishSubject: PublishSubject<String>
     private lateinit var compositeDisposable: CompositeDisposable
 
+    private val disposableObserver: DisposableObserver<String>
+        get() {
+            val phoneObserver: DisposableObserver<String> = object : DisposableObserver<String>() {
+                override fun onComplete() {
+
+                }
+
+                override fun onNext(t: String?) {
+                    if (t == null) {
+                        return
+                    }
+                    parsePhoneNumber(t)
+                }
+
+                override fun onError(e: Throwable?) {
+                }
+
+            }
+            return phoneObserver
+        }
+
+    private lateinit var phoneObserver: DisposableObserver<String>
+
     private fun initView() {
 
         compositeDisposable = CompositeDisposable()
@@ -126,7 +150,6 @@ class LibPhoneNumberActivity : AppCompatActivity() {
                 dismissCountryCodeList()
                 if (isInputByHand && s.toString().isNotBlank()) {
                     startMatchPhoneNumber(s.toString())
-                    searchPhoneNumberCountry(s.toString())
                 }
                 if (s.toString().isBlank()) {
                     enableConfirmButton(false)
@@ -157,7 +180,7 @@ class LibPhoneNumberActivity : AppCompatActivity() {
             }
         })
 
-        val phoneObserver: DisposableObserver<String> = object : DisposableObserver<String>() {
+        phoneObserver = object : DisposableObserver<String>() {
             override fun onComplete() {
 
             }
@@ -280,8 +303,6 @@ class LibPhoneNumberActivity : AppCompatActivity() {
     }
 
     private fun startMatchPhoneNumber(phoneNumber: String) {
-        Log.d(TAG, "start match input content.")
-        phonePublishSubject.onNext(phoneNumber)
         superFieldPublishSubject.onNext(phoneNumber)
     }
 
@@ -303,6 +324,7 @@ class LibPhoneNumberActivity : AppCompatActivity() {
             }
             tv_phone_info.text = info
         } catch (e: NumberFormatException) {
+            tv_superfield.text = e.message
             e.printStackTrace()
         }
     }
@@ -344,6 +366,9 @@ class LibPhoneNumberActivity : AppCompatActivity() {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            clearSubscribe()
+            compositeDisposable.add(phoneObserver)
+            tv_superfield.text = e.message
             tv_international_format.text = "Phone Number Wrong: " + e.message
         }
     }
@@ -403,17 +428,26 @@ class LibPhoneNumberActivity : AppCompatActivity() {
     }
 
     private fun showSuperFieldText(result: MatchResult) {
-        clearSubscribe()
         isInputByHand = false
         when (result.type) {
             ProxyIdEnum.UNKNOWN -> {
                 enableConfirmButton(false)
                 btn_confirm_proxyid.isEnabled = false
+                if (et_input.text.isNotBlank()) {
+                    tv_superfield.text = "Unknow Type ${result.content}"
+                } else {
+                    tv_superfield.text = ""
+                }
+            }
+            ProxyIdEnum.PHONENUMBER -> {
+                enableConfirmButton(true)
+                val content = result.type.toString() + " # " + result.content
+                et_input.setText(result.content)
+                tv_superfield.text = content
             }
             else -> {
                 enableConfirmButton(true)
                 val content = result.type.toString() + " # " + result.content
-                et_input.setText(result.content)
                 tv_superfield.text = content
             }
         }
