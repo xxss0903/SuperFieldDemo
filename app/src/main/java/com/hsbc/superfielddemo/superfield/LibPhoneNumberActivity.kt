@@ -111,9 +111,18 @@ class LibPhoneNumberActivity : AppCompatActivity() {
         sw_hk_first.isChecked = SuperFieldMatcher.instance.HK_PRIORITY
         sw_fpsid_first.isChecked = SuperFieldMatcher.instance.FPSID_PRIORITY
         sw_mobile_number.isChecked = SuperFieldMatcher.instance.ONLY_MOBILE_TYPE
-        sw_hk_first.setOnCheckedChangeListener { p0, p1 -> SuperFieldMatcher.instance.HK_PRIORITY = p1 }
-        sw_fpsid_first.setOnCheckedChangeListener { p1, p2 -> SuperFieldMatcher.instance.FPSID_PRIORITY = p2 }
-        sw_mobile_number.setOnCheckedChangeListener { p1, p2 -> SuperFieldMatcher.instance.ONLY_MOBILE_TYPE = p2 }
+        sw_hk_first.setOnCheckedChangeListener { p0, p1 ->
+            SuperFieldMatcher.instance.HK_PRIORITY = p1
+            startMatchPhoneNumber(et_input.text.toString())
+        }
+        sw_fpsid_first.setOnCheckedChangeListener { p1, p2 ->
+            SuperFieldMatcher.instance.FPSID_PRIORITY = p2
+            startMatchPhoneNumber(et_input.text.toString())
+        }
+        sw_mobile_number.setOnCheckedChangeListener { p1, p2 ->
+            SuperFieldMatcher.instance.ONLY_MOBILE_TYPE = p2
+            startMatchPhoneNumber(et_input.text.toString())
+        }
 
         compositeDisposable = CompositeDisposable()
         countryPublishSubject = PublishSubject.create()
@@ -341,42 +350,42 @@ class LibPhoneNumberActivity : AppCompatActivity() {
     private lateinit var listAdapter: CountryListAdapter
 
     private fun showCountryCodeList(result: MatchResult) {
-        if (popupWindow == null) {
-            rootView = LayoutInflater.from(this).inflate(R.layout.countrycode_popupwindow, null)
-            val rvCountry = rootView?.findViewById<RecyclerView>(R.id.rv_countrycode)
-            rvCountry?.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+        dismissCountryCodeList()
+        rootView = LayoutInflater.from(this).inflate(R.layout.countrycode_popupwindow, null)
+        val rvCountry = rootView?.findViewById<RecyclerView>(R.id.rv_countrycode)
+        rvCountry?.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
 
-            listAdapter = CountryListAdapter()
-            listAdapter.setOnItemClickListener(object : OnItemClickListener {
-                override fun onClick(position: Int, country: Country) {
-                    // choosed country
-                    dismissCountryCodeList()
-                    SuperFieldMatcher.instance.parse(country, country.phoneNumber)
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe({
-                                showSuperFieldText(it)
-                                isInputByHand = false
-                                et_input.setText(it.content)
-                                isInputByHand = true
-                            }, {
-                                tv_superfield.text = it.message
-                            })
-                }
-            })
-            listAdapter.datas = filterCountryList
-            listAdapter.setNationalNumber(result.nationalNumber)
-            rvCountry?.adapter = listAdapter
-            popupWindow = PopupWindow()
-            popupWindow?.contentView = rootView
-            popupWindow?.width = 800
-            popupWindow?.height = 600
-            popupWindow?.isOutsideTouchable = true
-            popupWindow?.showAsDropDown(et_input)
-        } else {
-            listAdapter.setNationalNumber(result.nationalNumber)
-            listAdapter.notifyDataSetChanged()
-        }
+        listAdapter = CountryListAdapter()
+        listAdapter.setOnItemClickListener(object : OnItemClickListener {
+            override fun onClick(position: Int, country: Country) {
+                // choosed country
+                dismissCountryCodeList()
+                SuperFieldMatcher.instance.parse(country, country.phoneNumber)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe({
+                            showSuperFieldText(it)
+                            isInputByHand = false
+                            et_input.setText(it.content)
+                            isInputByHand = true
+                        }, {
+                            tv_superfield.text = it.message
+                        })
+            }
+        })
+        listAdapter.datas = filterCountryList
+        listAdapter.setNationalNumber(result.nationalNumber)
+        rvCountry?.adapter = listAdapter
+        popupWindow = PopupWindow()
+        popupWindow?.contentView = rootView
+        popupWindow?.width = 800
+        popupWindow?.height = 600
+        popupWindow?.isOutsideTouchable = true
+        popupWindow?.showAsDropDown(et_input)
+//        } else {
+//            listAdapter.setNationalNumber(result.nationalNumber)
+//            listAdapter.notifyDataSetChanged()
+//        }
     }
 
     private fun showSuperFieldText(result: MatchResult) {

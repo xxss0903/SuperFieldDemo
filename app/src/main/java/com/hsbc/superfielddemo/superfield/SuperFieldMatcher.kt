@@ -96,39 +96,80 @@ class SuperFieldMatcher {
                 result.resultList = filterCountryList
 
             } else if (input.contains("-")) {
-                val phoneNumber = parseWithMinus(input)
-                if (phoneNumber != null) {
-                    result.type = ProxyIdEnum.PHONENUMBER
-                    result.content = getFormattedPhoneNumber(phoneNumber)
-                    val countryCode = countryCodeMap[phoneNumber.countryCode]
-                    if (countryCode != null) {
-                        result.country = getCountryFullName(countryCode)
-                    }
+                val tmpCountryList = parseWithMinus(input)
+                if (tmpCountryList != null && tmpCountryList.size > 0) {
+                    Collections.sort(tmpCountryList, object : Comparator<Country> {
+                        override fun compare(o1: Country?, o2: Country?): Int {
+                            if (o1 == null || o2 == null) {
+                                return 0
+                            }
+                            return o1.fullName.compareTo(o2.fullName)
+                        }
+                    })
+                    result.type = ProxyIdEnum.SEARCHCOUNTRY
+                    result.resultList.addAll(tmpCountryList)
+                } else {
+                    resetMatchResult(result)
                 }
+
+//                if (phoneNumber != null) {
+//                    result.type = ProxyIdEnum.PHONENUMBER
+//                    result.content = getFormattedPhoneNumber(phoneNumber)
+//                    val countryCode = countryCodeMap[phoneNumber.countryCode]
+//                    if (countryCode != null) {
+//                        result.country = getCountryFullName(countryCode)
+//                    }
+//                }
             } else if (input.startsWith("+")) {
-                val phoneNumber = parseWithPlus(input)
-                if (phoneNumber != null) {
-                    result.type = ProxyIdEnum.PHONENUMBER
-                    result.content = getFormattedPhoneNumber(phoneNumber)
-                    val countryCode = countryCodeMap[phoneNumber.countryCode]
-                    if (countryCode != null) {
-                        result.country = getCountryFullName(countryCode)
-                    }
+                val tmpCountryList = parseWithPlus(input)
+                if (tmpCountryList != null && tmpCountryList.size > 0) {
+                    Collections.sort(tmpCountryList, object : Comparator<Country> {
+                        override fun compare(o1: Country?, o2: Country?): Int {
+                            if (o1 == null || o2 == null) {
+                                return 0
+                            }
+                            return o1.fullName.compareTo(o2.fullName)
+                        }
+                    })
+                    result.type = ProxyIdEnum.SEARCHCOUNTRY
+                    result.resultList.addAll(tmpCountryList)
+                } else {
+                    resetMatchResult(result)
                 }
             } else if (ProxyIdValidator.isAllNumeric(input)) {
                 val tmpCountryList = parseWithAllNumber(input)
+
                 if (tmpCountryList != null && tmpCountryList.size > 0) {
+                    Collections.sort(tmpCountryList, object : Comparator<Country> {
+                        override fun compare(o1: Country?, o2: Country?): Int {
+                            if (o1 == null || o2 == null) {
+                                return 0
+                            }
+                            return o1.fullName.compareTo(o2.fullName)
+                        }
+                    })
                     result.type = ProxyIdEnum.SEARCHCOUNTRY
                     result.resultList.addAll(tmpCountryList)
                 } else if (ProxyIdValidator.isFpsId(input)) {
                     result.type = ProxyIdEnum.FPSID
                     result.content = input
+                } else {
+                    resetMatchResult(result)
                 }
             }
         } else {
             // unknow type
         }
         return Observable.just(result)
+    }
+
+    private fun resetMatchResult(result: MatchResult) {
+        result.type = ProxyIdEnum.UNKNOWN
+        result.resultList.clear()
+        result.country = ""
+        result.content = ""
+        result.countryCodeInt = -1
+        result.nationalNumber = ""
     }
 
     private fun getFormattedHKPHoneNumber(input: String): String {
@@ -142,7 +183,7 @@ class SuperFieldMatcher {
 
         if (input.startsWith("852")) {
             if (input.contains("-")) {
-                return input.replace("-", "")
+                return input.replaceFirst("852-", "")
             } else {
                 return input.replaceFirst("852", "")
             }
@@ -151,26 +192,33 @@ class SuperFieldMatcher {
     }
 
     private fun parseWithAllNumber(input: String): MutableList<Country>? {
-        var countryList = searchPhoneNumberCountry(input)
+        var tmpCountryList = searchPhoneNumberCountry(input)
         val content = "+" + input
         var phoneNumber: Phonenumber.PhoneNumber? = null
         try {
             phoneNumber = PhoneNumberUtil.getInstance().parse(content, "")
-            if (phoneNumber != null && PhoneNumberUtil.getInstance().isValidNumber(phoneNumber)) {
-                val region = countryCodeMap[phoneNumber.countryCode]
-                if (region != null) {
-                    val fullName = getCountryFullName(region)
-                    val country = Country(region, fullName, phoneNumber.countryCode)
+            for (country in countryList) {
+                if (phoneNumber.countryCode == country.codeInt && PhoneNumberUtil.getInstance().isValidNumber(phoneNumber)) {
                     country.phoneNumber = phoneNumber.nationalNumber.toString()
-                    if (countryList != null) {
-                        countryList.add(country)
-                    } else {
-                        countryList = mutableListOf()
-                        countryList.add(country)
-                    }
+                    tmpCountryList?.add(country)
                 }
             }
-            return countryList
+
+//            if (phoneNumber != null && PhoneNumberUtil.getInstance().isValidNumber(phoneNumber)) {
+//                val region = countryCodeMap[phoneNumber.countryCode]
+//                if (region != null) {
+//                    val fullName = getCountryFullName(region)
+//                    val country = Country(region, fullName, phoneNumber.countryCode)
+//                    country.phoneNumber = phoneNumber.nationalNumber.toString()
+//                    if (tmpCountryList != null) {
+//                        tmpCountryList.add(country)
+//                    } else {
+//                        tmpCountryList = mutableListOf()
+//                        tmpCountryList.add(country)
+//                    }
+//                }
+//            }
+            return tmpCountryList
         } catch (e: NumberParseException) {
             e.printStackTrace()
         } catch (e: NumberFormatException) {
@@ -179,20 +227,30 @@ class SuperFieldMatcher {
         return null
     }
 
-    private fun parseWithPlus(input: String): Phonenumber.PhoneNumber? {
+    private fun parseWithPlus(input: String): MutableList<Country>? {
         try {
+            var tmpCountryList = searchPhoneNumberCountry(input)
             val phoneNumber = PhoneNumberUtil.getInstance().parse(input, "")
-            if (PhoneNumberUtil.getInstance().isValidNumber(phoneNumber)) {
-                return phoneNumber
+
+            for (country in countryList) {
+                if (phoneNumber.countryCode == country.codeInt && PhoneNumberUtil.getInstance().isValidNumber(phoneNumber)) {
+                    country.phoneNumber = phoneNumber.nationalNumber.toString()
+                    tmpCountryList?.add(country)
+                }
             }
+            return tmpCountryList
+
+
+//            if (PhoneNumberUtil.getInstance().isValidNumber(phoneNumber)) {
+//                return phoneNumber
+//            }
         } catch (e: NumberParseException) {
             e.printStackTrace()
         }
         return null
     }
 
-    private fun parseWithMinus(content: String): Phonenumber.PhoneNumber? {
-        val result = MatchResult()
+    private fun parseWithMinus(content: String): MutableList<Country>? {
         val number = content.replace("+", "")
         val numberList = number.split("-")
         var countryCode = ""
@@ -204,13 +262,29 @@ class SuperFieldMatcher {
             nationalNumber = numberList[1]
         }
         if (countryCode.isNotBlank()) {
-            val content = "+" + countryCode + nationalNumber
-            val phoneNumber = PhoneNumberUtil.getInstance().parse(content, "")
-            if (PhoneNumberUtil.getInstance().isValidNumber(phoneNumber)) {
-                result.type = ProxyIdEnum.PHONENUMBER
-                result.content = getFormattedPhoneNumber(phoneNumber)
-                return phoneNumber
+            val tmpCountryList: MutableList<Country> = mutableListOf()
+            val countryCodeInt = countryCode.toInt()
+            var phoneNumber = Phonenumber.PhoneNumber().setNationalNumber(nationalNumber.toLong()).setCountryCode(countryCodeInt)
+            for (country in countryList) {
+                if (countryCodeInt == country.codeInt && PhoneNumberUtil.getInstance().isValidNumber(phoneNumber)) {
+                    if (ONLY_MOBILE_TYPE && PhoneNumberUtil.getInstance().getNumberType(phoneNumber) == PhoneNumberUtil.PhoneNumberType.MOBILE) {
+                        country.phoneNumber = phoneNumber.nationalNumber.toString()
+                        tmpCountryList.add(country)
+                    }
+                    if (!ONLY_MOBILE_TYPE) {
+                        country.phoneNumber = phoneNumber.nationalNumber.toString()
+                        tmpCountryList.add(country)
+                    }
+                }
             }
+            return tmpCountryList
+//            val content = "+" + countryCode + nationalNumber
+//            val phoneNumber = PhoneNumberUtil.getInstance().parse(content, "")
+//            if (PhoneNumberUtil.getInstance().isValidNumber(phoneNumber)) {
+//                result.type = ProxyIdEnum.PHONENUMBER
+//                result.content = getFormattedPhoneNumber(phoneNumber)
+//                return phoneNumber
+//            }
         }
         return null
     }
@@ -400,7 +474,8 @@ class SuperFieldMatcher {
 
     private fun searchPhoneNumberCountry(phone: String): MutableList<Country>? {
         try {
-            val phoneNumberLong = phone.toLong()
+            val phoneStr = phone.replace("+", "")
+            val phoneNumberLong = phoneStr.toLong()
             val phoneNumber = Phonenumber.PhoneNumber()
             val fitCountryList: MutableList<Country> = mutableListOf()
             for (country in countryList) {
@@ -408,14 +483,14 @@ class SuperFieldMatcher {
                 phoneNumber.countryCode = country.codeInt
                 if (ONLY_MOBILE_TYPE) {
                     if (PhoneNumberUtil.getInstance().getNumberType(phoneNumber) == PhoneNumberUtil.PhoneNumberType.MOBILE) {
-                        country.phoneNumber = phone
+                        country.phoneNumber = phoneStr
                         fitCountryList.add(country)
                     } else {
                         country.phoneNumber = ""
                     }
                 } else {
                     if (PhoneNumberUtil.getInstance().isValidNumber(phoneNumber)) {
-                        country.phoneNumber = phone
+                        country.phoneNumber = phoneStr
                         fitCountryList.add(country)
                     } else {
                         country.phoneNumber = ""
