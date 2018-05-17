@@ -356,6 +356,9 @@ class LibPhoneNumberActivity : AppCompatActivity() {
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe({
                                 showSuperFieldText(it)
+                                isInputByHand = false
+                                et_input.setText(it.content)
+                                isInputByHand = true
                             }, {
                                 tv_superfield.text = it.message
                             })
@@ -391,7 +394,6 @@ class LibPhoneNumberActivity : AppCompatActivity() {
             ProxyIdEnum.PHONENUMBER -> {
                 enableConfirmButton(true)
                 val content = result.country + ": " + result.content
-//                et_input.setText(result.content)
                 tv_superfield.text = content
             }
             else -> {

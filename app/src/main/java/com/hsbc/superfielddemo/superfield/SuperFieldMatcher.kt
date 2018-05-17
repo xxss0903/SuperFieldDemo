@@ -30,12 +30,18 @@ class MatchResult {
 
 class SuperFieldMatcher {
 
+    val HK_CODE = 852
     var FPSID_PRIORITY = true
     var HK_PRIORITY = true
     var ONLY_MOBILE_TYPE = true
     val TAG = "SuperFieldMatcher"
 
     val countryCodeMap: MutableMap<Int, String> = mutableMapOf()
+    private val countryList: MutableList<Country>
+        get() {
+            return getSupportedCountryList()
+        }
+
 
     companion object {
         val instance = SuperFieldMatcher()
@@ -45,6 +51,8 @@ class SuperFieldMatcher {
         val emailValidator = ProxyIdValidationImpl(ValidEmailImpl())
         val phoneNumberValidator = ProxyIdValidationImpl(ValidPhoneNumberImpl())
         val fpsIdValidator = ProxyIdValidationImpl(ValidFpsidImpl())
+        var filterCountryList: MutableList<Country> = mutableListOf()
+
 
         val result = MatchResult()
         if (emailValidator.validInput(input)) {
@@ -52,22 +60,41 @@ class SuperFieldMatcher {
             result.content = input
         } else if (phoneNumberValidator.validInput(input)) {
             if (ProxyIdValidator.isValidNewHkMobileNum(input)) {
-                result.type = ProxyIdEnum.PHONENUMBER
-                result.content = getFormattedHKPHoneNumber(input)
-                val countryCode = countryCodeMap[852]
-                if (countryCode != null) {
-                    result.country = getCountryFullName(countryCode)
+//                result.type = ProxyIdEnum.PHONENUMBER
+//                result.content = getFormattedHKPHoneNumber(input)
+//                val countryCode = countryCodeMap[HK_CODE]
+//                if (countryCode != null) {
+//                    result.country = getCountryFullName(countryCode)
+//                }
+                result.type = ProxyIdEnum.SEARCHCOUNTRY
+                for (country in countryList) {
+                    if (country.codeInt == HK_CODE) {
+                        country.phoneNumber = getFormattedHKPHoneNumber(input)
+                        filterCountryList.add(country)
+                    }
                 }
+                result.resultList = filterCountryList
+
             } else if (FPSID_PRIORITY && fpsIdValidator.validInput(input)) {
                 result.type = ProxyIdEnum.FPSID
                 result.content = input
             } else if (HK_PRIORITY && ProxyIdValidator.isAllNumeric(input) && input.length == 8) {
-                result.type = ProxyIdEnum.PHONENUMBER
-                result.content = getFormattedHKPHoneNumber(input)
-                val countryCode = countryCodeMap[852]
-                if (countryCode != null) {
-                    result.country = getCountryFullName(countryCode)
+//                result.type = ProxyIdEnum.PHONENUMBER
+//                result.content = getFormattedHKPHoneNumber(input)
+//                val countryCode = countryCodeMap[852]
+//                if (countryCode != null) {
+//                    result.country = getCountryFullName(countryCode)
+//                }
+
+                result.type = ProxyIdEnum.SEARCHCOUNTRY
+                for (country in countryList) {
+                    if (country.codeInt == HK_CODE) {
+                        country.phoneNumber = getFormattedHKPHoneNumber(input)
+                        filterCountryList.add(country)
+                    }
                 }
+                result.resultList = filterCountryList
+
             } else if (input.contains("-")) {
                 val phoneNumber = parseWithMinus(input)
                 if (phoneNumber != null) {
@@ -89,10 +116,10 @@ class SuperFieldMatcher {
                     }
                 }
             } else if (ProxyIdValidator.isAllNumeric(input)) {
-                val countryList = parseWithAllNumber(input)
-                if (countryList != null && countryList.size > 0) {
+                val tmpCountryList = parseWithAllNumber(input)
+                if (tmpCountryList != null && tmpCountryList.size > 0) {
                     result.type = ProxyIdEnum.SEARCHCOUNTRY
-                    result.resultList.addAll(countryList)
+                    result.resultList.addAll(tmpCountryList)
                 } else if (ProxyIdValidator.isFpsId(input)) {
                     result.type = ProxyIdEnum.FPSID
                     result.content = input
@@ -107,20 +134,20 @@ class SuperFieldMatcher {
     private fun getFormattedHKPHoneNumber(input: String): String {
         if (input.startsWith("+852")) {
             if (input.contains("-")) {
-                return input
+                return input.replaceFirst("+852", "").replace("-", "")
             } else {
-                return input.replace("+852", "+852-")
+                return input.replace("+852", "")
             }
         }
 
         if (input.startsWith("852")) {
             if (input.contains("-")) {
-                return "+" + input
+                return input.replace("-", "")
             } else {
-                return input.replaceFirst("852", "+852-")
+                return input.replaceFirst("852", "")
             }
         }
-        return "+852-" + input
+        return input
     }
 
     private fun parseWithAllNumber(input: String): MutableList<Country>? {
@@ -344,11 +371,6 @@ class SuperFieldMatcher {
     fun getFormattedPhoneNumber(phoneNumber: Phonenumber.PhoneNumber): String {
         return "+${phoneNumber.countryCode}-${phoneNumber.nationalNumber}"
     }
-
-    private val countryList: MutableList<Country>
-        get() {
-            return getSupportedCountryList()
-        }
 
     private fun getSupportedCountryList(): MutableList<Country> {
         val supportedRegions = PhoneNumberUtil.getInstance().supportedRegions
