@@ -220,6 +220,7 @@ class LibPhoneNumberActivity : AppCompatActivity() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
                     if (ProxyIdValidator.isFpsId(et_input.text.toString())) {
+                        tv_superfield.text = "FPSID # ${et_input.text}"
                         enableConfirmButton(true)
                     }
                     when (it.type) {
