@@ -20,6 +20,7 @@ enum class ProxyIdEnum {
 }
 
 class MatchResult {
+    var country: String = ""
     var content: String = ""
     var countryCodeInt: Int = -1
     var nationalNumber: String = ""
@@ -53,30 +54,46 @@ class SuperFieldMatcher {
             if (ProxyIdValidator.isValidNewHkMobileNum(input)) {
                 result.type = ProxyIdEnum.PHONENUMBER
                 result.content = getFormattedHKPHoneNumber(input)
+                val countryCode = countryCodeMap[852]
+                if (countryCode != null) {
+                    result.country = getCountryFullName(countryCode)
+                }
             } else if (FPSID_PRIORITY && fpsIdValidator.validInput(input)) {
                 result.type = ProxyIdEnum.FPSID
                 result.content = input
             } else if (HK_PRIORITY && ProxyIdValidator.isAllNumeric(input) && input.length == 8) {
                 result.type = ProxyIdEnum.PHONENUMBER
                 result.content = getFormattedHKPHoneNumber(input)
+                val countryCode = countryCodeMap[852]
+                if (countryCode != null) {
+                    result.country = getCountryFullName(countryCode)
+                }
             } else if (input.contains("-")) {
                 val phoneNumber = parseWithMinus(input)
                 if (phoneNumber != null) {
                     result.type = ProxyIdEnum.PHONENUMBER
                     result.content = getFormattedPhoneNumber(phoneNumber)
+                    val countryCode = countryCodeMap[phoneNumber.countryCode]
+                    if (countryCode != null) {
+                        result.country = getCountryFullName(countryCode)
+                    }
                 }
             } else if (input.startsWith("+")) {
                 val phoneNumber = parseWithPlus(input)
                 if (phoneNumber != null) {
                     result.type = ProxyIdEnum.PHONENUMBER
                     result.content = getFormattedPhoneNumber(phoneNumber)
+                    val countryCode = countryCodeMap[phoneNumber.countryCode]
+                    if (countryCode != null) {
+                        result.country = getCountryFullName(countryCode)
+                    }
                 }
             } else if (ProxyIdValidator.isAllNumeric(input)) {
                 val countryList = parseWithAllNumber(input)
                 if (countryList != null && countryList.size > 0) {
                     result.type = ProxyIdEnum.SEARCHCOUNTRY
                     result.resultList.addAll(countryList)
-                } else if(ProxyIdValidator.isFpsId(input)) {
+                } else if (ProxyIdValidator.isFpsId(input)) {
                     result.type = ProxyIdEnum.FPSID
                     result.content = input
                 }
@@ -187,6 +204,7 @@ class SuperFieldMatcher {
 
                 }
             }
+            result.country = country.fullName
             return Observable.just(result)
         }
     }

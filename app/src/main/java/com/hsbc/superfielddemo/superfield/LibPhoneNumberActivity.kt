@@ -383,20 +383,20 @@ class LibPhoneNumberActivity : AppCompatActivity() {
                 enableConfirmButton(false)
                 btn_confirm_proxyid.isEnabled = false
                 if (et_input.text.isNotBlank()) {
-                    tv_superfield.text = "Unknow Type ${result.content}"
+                    tv_superfield.text = "Unknow Type: ${result.content}"
                 } else {
                     tv_superfield.text = ""
                 }
             }
             ProxyIdEnum.PHONENUMBER -> {
                 enableConfirmButton(true)
-                val content = result.type.toString() + " # " + result.content
-                et_input.setText(result.content)
+                val content = result.country + ": " + result.content
+//                et_input.setText(result.content)
                 tv_superfield.text = content
             }
             else -> {
                 enableConfirmButton(true)
-                val content = result.type.toString() + " # " + result.content
+                val content = result.type.toString() + ": " + result.content
                 tv_superfield.text = content
             }
         }
