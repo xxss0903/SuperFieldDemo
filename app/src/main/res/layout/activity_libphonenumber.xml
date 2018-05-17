@@ -1,98 +1,143 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    android:orientation="vertical"
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <LinearLayout
-        android:orientation="horizontal"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <EditText
-            android:visibility="gone"
-            android:id="@+id/et_country"
-            android:hint="@string/input_country"
-            android:layout_weight="4"
-            android:layout_width="0dp"
-            android:layout_height="match_parent" />
 
-        <android.support.v7.widget.AppCompatSpinner
-            android:visibility="gone"
-            android:id="@+id/sp_countrycode"
-            android:layout_width="0dp"
-            android:layout_weight="3"
-            android:layout_height="wrap_content"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:orientation="horizontal">
 
-        <EditText
-            android:id="@+id/et_input"
-            android:layout_width="0dp"
-            android:layout_weight="4"
-            android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/et_country"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="4"
+                android:hint="@string/input_country"
+                android:visibility="gone" />
 
+            <android.support.v7.widget.AppCompatSpinner
+                android:id="@+id/sp_countrycode"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:visibility="gone" />
+
+            <EditText
+                android:id="@+id/et_input"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="4" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_superfield"
+            android:layout_width="match_parent"
+            android:layout_height="30dp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Switch
+                android:id="@+id/sw_hk_first"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hong Kong " />
+
+            <Switch
+                android:id="@+id/sw_fpsid_first"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:text="FpsID " />
+
+            <Switch
+                android:id="@+id/sw_mobile_number"
+                android:text="Mobile Number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btn_confirm_proxyid"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:enabled="false"
+                android:text="Continue" />
+
+
+        </LinearLayout>
 
     </LinearLayout>
 
     <TextView
-        android:id="@+id/tv_superfield"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:enabled="false"
-        android:id="@+id/btn_confirm_proxyid"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="160dp"
-        android:text="@string/confirm_proxyid"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <TextView
-        android:visibility="gone"
         android:id="@+id/tv_international_format"
-        android:text="Country Code:"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="Country Code:"
+        android:visibility="gone" />
 
 
     <TextView
-        android:visibility="gone"
         android:id="@+id/tv_countrycode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:text="Country Code:"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:visibility="gone" />
 
     <TextView
-        android:visibility="gone"
         android:id="@+id/tv_countryname"
-        android:text="Country Name:"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="Country Name:"
+        android:visibility="gone" />
 
 
     <TextView
-        android:visibility="gone"
         android:id="@+id/tv_seperate_number"
-        android:text="Phone Name:"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="Phone Name:"
+        android:visibility="gone" />
 
     <Button
-        android:visibility="gone"
-        android:text="Parse Phone Number"
         android:id="@+id/btn_parse"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="Parse Phone Number"
+        android:visibility="gone" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
         <TextView
-            android:visibility="gone"
             android:id="@+id/tv_phone_info"
-            android:text="自动解析号码归属地"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:text="自动解析号码归属地"
+            android:visibility="gone" />
     </ScrollView>
 
 </LinearLayout>

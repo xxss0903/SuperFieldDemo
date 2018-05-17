@@ -31,6 +31,7 @@ class SuperFieldMatcher {
 
     var FPSID_PRIORITY = true
     var HK_PRIORITY = true
+    var ONLY_MOBILE_TYPE = true
     val TAG = "SuperFieldMatcher"
 
     val countryCodeMap: MutableMap<Int, String> = mutableMapOf()
@@ -75,6 +76,9 @@ class SuperFieldMatcher {
                 if (countryList != null && countryList.size > 0) {
                     result.type = ProxyIdEnum.SEARCHCOUNTRY
                     result.resultList.addAll(countryList)
+                } else if(ProxyIdValidator.isFpsId(input)) {
+                    result.type = ProxyIdEnum.FPSID
+                    result.content = input
                 }
             }
         } else {
@@ -158,7 +162,7 @@ class SuperFieldMatcher {
         if (countryCode.isNotBlank()) {
             val content = "+" + countryCode + nationalNumber
             val phoneNumber = PhoneNumberUtil.getInstance().parse(content, "")
-            if (PhoneNumberUtil.getInstance().isValidNumber(phoneNumber)){
+            if (PhoneNumberUtil.getInstance().isValidNumber(phoneNumber)) {
                 result.type = ProxyIdEnum.PHONENUMBER
                 result.content = getFormattedPhoneNumber(phoneNumber)
                 return phoneNumber
@@ -362,11 +366,20 @@ class SuperFieldMatcher {
             for (country in countryList) {
                 phoneNumber.nationalNumber = phoneNumberLong
                 phoneNumber.countryCode = country.codeInt
-                if (PhoneNumberUtil.getInstance().isValidNumber(phoneNumber)) {
-                    country.phoneNumber = phone
-                    fitCountryList.add(country)
+                if (ONLY_MOBILE_TYPE) {
+                    if (PhoneNumberUtil.getInstance().getNumberType(phoneNumber) == PhoneNumberUtil.PhoneNumberType.MOBILE) {
+                        country.phoneNumber = phone
+                        fitCountryList.add(country)
+                    } else {
+                        country.phoneNumber = ""
+                    }
                 } else {
-                    country.phoneNumber = ""
+                    if (PhoneNumberUtil.getInstance().isValidNumber(phoneNumber)) {
+                        country.phoneNumber = phone
+                        fitCountryList.add(country)
+                    } else {
+                        country.phoneNumber = ""
+                    }
                 }
             }
             return fitCountryList

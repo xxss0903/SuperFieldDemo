@@ -10,6 +10,7 @@ import android.text.Spanned
 import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.widget.*
 import com.google.i18n.phonenumbers.PhoneNumberUtil
@@ -17,7 +18,6 @@ import com.google.i18n.phonenumbers.Phonenumber
 import com.google.i18n.phonenumbers.geocoding.PhoneNumberOfflineGeocoder
 import com.hsbc.superfielddemo.R
 import io.reactivex.Observable
-import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Function
@@ -108,6 +108,13 @@ class LibPhoneNumberActivity : AppCompatActivity() {
 
     private fun initView() {
 
+        sw_hk_first.isChecked = SuperFieldMatcher.instance.HK_PRIORITY
+        sw_fpsid_first.isChecked = SuperFieldMatcher.instance.FPSID_PRIORITY
+        sw_mobile_number.isChecked = SuperFieldMatcher.instance.ONLY_MOBILE_TYPE
+        sw_hk_first.setOnCheckedChangeListener { p0, p1 -> SuperFieldMatcher.instance.HK_PRIORITY = p1 }
+        sw_fpsid_first.setOnCheckedChangeListener { p1, p2 -> SuperFieldMatcher.instance.FPSID_PRIORITY = p2 }
+        sw_mobile_number.setOnCheckedChangeListener { p1, p2 -> SuperFieldMatcher.instance.ONLY_MOBILE_TYPE = p2 }
+
         compositeDisposable = CompositeDisposable()
         countryPublishSubject = PublishSubject.create()
         phonePublishSubject = PublishSubject.create()
@@ -157,11 +164,11 @@ class LibPhoneNumberActivity : AppCompatActivity() {
             }
         })
 
-        et_country.setOnFocusChangeListener(object : View.OnFocusChangeListener {
+        et_country.onFocusChangeListener = object : View.OnFocusChangeListener {
             override fun onFocusChange(v: View?, hasFocus: Boolean) {
                 dismissCountryCodeList()
             }
-        })
+        }
 
         et_country.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -360,6 +367,7 @@ class LibPhoneNumberActivity : AppCompatActivity() {
             popupWindow?.contentView = rootView
             popupWindow?.width = 800
             popupWindow?.height = 600
+            popupWindow?.isOutsideTouchable = true
             popupWindow?.showAsDropDown(et_input)
         } else {
             listAdapter.setNationalNumber(result.nationalNumber)

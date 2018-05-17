@@ -16,21 +16,21 @@ class CountryListAdapter : RecyclerView.Adapter<ViewHolder>() {
     private lateinit var onItemClickListener: OnItemClickListener
     var datas: MutableList<Country> = mutableListOf()
 
-    override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         if (datas[position].codeName == "FPSID") {
-            holder?.textView?.text = "FPSID"
+            holder.textView.text = "FPSID"
         } else {
-            holder?.textView?.text = "(${datas[position].fullName}) +${datas[position].codeInt}-${datas[position].phoneNumber}"
+            holder.textView.text = "(${datas[position].fullName}) +${datas[position].codeInt}-${datas[position].phoneNumber}"
         }
-        holder?.itemView?.setOnClickListener(object : View.OnClickListener {
+        holder.itemView?.setOnClickListener(object : View.OnClickListener {
             override fun onClick(v: View?) {
                 onItemClickListener.onClick(position, datas[position])
             }
         })
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder {
-        val itemView = LayoutInflater.from(parent?.context).inflate(R.layout.item_country_info, null)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val itemView = LayoutInflater.from(parent.context).inflate(R.layout.item_country_info, null)
         return ViewHolder(itemView)
     }
 
